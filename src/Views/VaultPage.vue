@@ -1,6 +1,70 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 
+const apiSearchQuery = ref('')
+const apiSearchResults = ref([])
+const apiSearchLoading = ref(false)
+const apiSearchError = ref('')
+
+async function searchGameBrain() {
+  const query = apiSearchQuery.value.trim()
+
+  if (!query) {
+    apiSearchError.value = 'Please enter a game name.'
+    return
+  }
+
+  apiSearchLoading.value = true
+  apiSearchError.value = ''
+  apiSearchResults.value = []
+
+  try {
+    const response = await fetch(
+      `/api/games?query=${encodeURIComponent(query)}`,
+    )
+
+    if (!response.ok) {
+      throw new Error('Game search failed.')
+    }
+
+    const data = await response.json()
+    apiSearchResults.value = data.results ?? []
+
+    if (apiSearchResults.value.length === 0) {
+      apiSearchError.value = 'No games found. Try another title.'
+    }
+  } catch (error) {
+    apiSearchError.value = error.message
+  } finally {
+    apiSearchLoading.value = false
+  }
+}
+
+function addApiGame(game) {
+  const alreadyAdded = games.value.some(
+    (savedGame) =>
+      savedGame.gameBrainId === game.id ||
+      savedGame.title.toLowerCase() === game.name.toLowerCase(),
+  )
+
+  if (alreadyAdded) {
+    alert(`${game.name} is already in your ConQuest Vault!`)
+    return
+  }
+
+  games.value.push({
+    id: `gamebrain-${game.id}`,
+    gameBrainId: game.id,
+    title: game.name,
+    status: 'Want to Play',
+    image: game.image,
+    genre: game.genre,
+    year: game.year,
+  })
+
+  alert(`${game.name} was added to your ConQuest Vault!`)
+}
+
 const games = ref([
   {
     id: 1,
@@ -104,6 +168,75 @@ const filteredGames = computed(() => {
   <main class="min-h-screen bg-[#FFF8FB] px-6 py-10 text-[#475569]">
     <div class="mx-auto max-w-5xl">
       <h1 class="mb-10 text-3xl font-bold">My ConQuest Vault</h1>
+
+      <!-- Search GameBrain -->
+      <div class="mb-8 rounded-xl bg-sky-100 p-6">
+        <h2 class="mb-3 text-xl font-bold">Discover New Games</h2>
+
+        <p class="mb-4 text-sm">
+          Search for games to add to your ConQuest Vault!
+        </p>
+
+        <form class="flex flex-wrap gap-3" @submit.prevent="searchGameBrain">
+          <input
+            v-model="apiSearchQuery"
+            type="text"
+            placeholder="Search GameBrain..."
+            class="flex-1 rounded-lg border border-slate-200 bg-white px-4 py-3"
+          />
+
+          <button
+            type="submit"
+            :disabled="apiSearchLoading"
+            class="rounded-lg bg-pink-300 px-6 py-3 font-semibold hover:bg-pink-400 disabled:opacity-50"
+          >
+            {{ apiSearchLoading ? 'Searching...' : 'Find Games' }}
+          </button>
+        </form>
+
+        <p v-if="apiSearchError" class="mt-3 text-sm text-red-600">
+          {{ apiSearchError }}
+        </p>
+
+        <p v-if="apiSearchResults.length > 0" class="mt-3 text-sm">
+          Found {{ apiSearchResults.length }} games!
+        </p>
+
+        <!-- GameBrain Search Results -->
+        <div
+          v-if="apiSearchResults.length > 0"
+          class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+        >
+          <div
+            v-for="game in apiSearchResults"
+            :key="game.id"
+            class="overflow-hidden rounded-xl bg-white p-4 shadow-sm"
+          >
+            <img
+              v-if="game.image"
+              :src="game.image"
+              :alt="game.name"
+              class="mb-4 h-40 w-full rounded-lg object-cover"
+            />
+
+            <h3 class="mb-2 font-bold">
+              {{ game.name }}
+            </h3>
+
+            <p class="mb-1 text-sm">Genre: {{ game.genre || 'Unknown' }}</p>
+
+            <p class="mb-4 text-sm">Year: {{ game.year || 'Unknown' }}</p>
+
+            <button
+              type="button"
+              class="rounded-lg bg-pink-300 px-4 py-2 font-semibold hover:bg-pink-400"
+              @click="addApiGame(game)"
+            >
+              Add to Vault
+            </button>
+          </div>
+        </div>
+      </div>
 
       <div class="mb-4 flex flex-wrap gap-3">
         <input
@@ -212,10 +345,20 @@ const filteredGames = computed(() => {
           :key="game.id"
           class="rounded-xl border border-pink-200 bg-white p-3"
         >
-          <div
-            class="mb-3 flex h-44 items-center justify-center rounded-lg bg-sky-100"
-          >
-            Game Cover
+          <div class="mb-4">
+            <img
+              v-if="game.image"
+              :src="game.image"
+              :alt="`${game.title} cover`"
+              class="h-44 w-full rounded-lg object-cover"
+            />
+
+            <div
+              v-else
+              class="flex h-44 items-center justify-center rounded-lg bg-sky-100"
+            >
+              Game Cover
+            </div>
           </div>
 
           <h2 class="mb-3 min-h-12 font-bold">

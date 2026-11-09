@@ -98,8 +98,11 @@ function playThisGame() {
 
       <div class="rounded-xl bg-purple-100 p-8 text-center">
         <h2 class="mb-6 text-2xl font-bold">
-          Your Next Game:
-          {{ recommendedGame?.title || 'No games in your Vault yet' }}
+          {{
+            recommendedGame
+              ? `Your Next Game: ${recommendedGame.title}`
+              : 'No Matching ConQuest Found'
+          }}
         </h2>
 
         <!-- Game Cover Placeholder -->
@@ -123,8 +126,9 @@ function playThisGame() {
         </p>
 
         <p v-else class="mx-auto mb-4 max-w-xl">
-          We couldn't find a game in your ConQuest Vault that matches your
-          selected mood. Try another mood or add more games!
+          No games in your ConQuest Vault match your selected mood and available
+          playtime. Try changing your answers or adding more games to your Vault
+          to discover your next adventure!
         </p>
 
         <div class="flex flex-wrap justify-center gap-4">
