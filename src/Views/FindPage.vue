@@ -1,8 +1,26 @@
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 const playTime = ref('')
 const gameMood = ref('')
+
+const router = useRouter()
+
+function findMyConQuest() {
+  if (!playTime.value || !gameMood.value) {
+    alert('Please answer both questions first!')
+    return
+  }
+
+  router.push({
+    path: '/result',
+    query: {
+      time: playTime.value,
+      mood: gameMood.value,
+    },
+  })
+}
 </script>
 
 <template>
@@ -70,6 +88,7 @@ const gameMood = ref('')
 
         <button
           type="button"
+          @click="findMyConQuest"
           class="rounded-lg bg-pink-300 px-8 py-4 font-semibold hover:bg-pink-400"
         >
           Find My Next ConQuest
