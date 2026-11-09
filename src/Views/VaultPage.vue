@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 const games = ref([
   {
@@ -19,9 +19,67 @@ const games = ref([
   },
 ])
 
+const savedGames = localStorage.getItem('gameConquestVault')
+
+if (savedGames !== null) {
+  try {
+    const parsedGames = JSON.parse(savedGames)
+
+    if (Array.isArray(parsedGames)) {
+      games.value = parsedGames
+    }
+  } catch (error) {
+    console.error('Unable to load saved games:', error)
+  }
+}
+
+watch(
+  games,
+  (updatedGames) => {
+    localStorage.setItem('gameConquestVault', JSON.stringify(updatedGames))
+  },
+  { deep: true },
+)
+
 const searchQuery = ref('')
 
 const showAddGameForm = ref(false)
+
+const newGameTitle = ref('')
+const newGameStatus = ref('Want to Play')
+
+function addGame() {
+  const title = newGameTitle.value.trim()
+
+  if (!title) {
+    alert('Please enter a game title.')
+    return
+  }
+
+  const game = {
+    id: Date.now(),
+    title: title,
+    status: newGameStatus.value,
+  }
+
+  games.value.push(game)
+
+  newGameTitle.value = ''
+  newGameStatus.value = 'Want to Play'
+  selectedStatus.value = 'All Games'
+  searchQuery.value = ''
+  showAddGameForm.value = false
+}
+
+function removeGame(game) {
+  const confirmed = window.confirm(
+    `Are you sure you want to remove "${game.title}" from your ConQuest Vault?`,
+  )
+
+  if (confirmed) {
+    games.value = games.value.filter((savedGame) => savedGame.id !== game.id)
+  }
+}
 
 const selectedStatus = ref('All Games')
 
@@ -77,7 +135,43 @@ const filteredGames = computed(() => {
       >
         <h2 class="mb-4 text-xl font-bold">Add a Game to Your Vault</h2>
 
-        <p class="mb-4">Search for a game and add it to your collection.</p>
+        <div class="mb-4">
+          <label for="gameTitle" class="mb-2 block font-semibold">
+            Game Title
+          </label>
+
+          <input
+            id="gameTitle"
+            v-model="newGameTitle"
+            type="text"
+            placeholder="Enter a game title..."
+            class="w-full rounded-lg border border-sky-200 bg-white px-4 py-3 outline-none focus:border-pink-300"
+          />
+        </div>
+
+        <div class="mb-4">
+          <label for="gameStatus" class="mb-2 block font-semibold">
+            Game Status
+          </label>
+
+          <select
+            id="gameStatus"
+            v-model="newGameStatus"
+            class="w-full rounded-lg border border-sky-200 bg-white px-4 py-3"
+          >
+            <option value="Want to Play">Want to Play</option>
+            <option value="Currently Playing">Currently Playing</option>
+            <option value="Completed">Completed</option>
+          </select>
+        </div>
+
+        <button
+          type="button"
+          @click="addGame"
+          class="mr-3 rounded-lg bg-sky-200 px-5 py-2 font-semibold hover:bg-sky-300"
+        >
+          Save Game
+        </button>
 
         <button
           type="button"
@@ -128,22 +222,41 @@ const filteredGames = computed(() => {
             {{ game.title }}
           </h2>
 
-          <span
-            class="mb-3 inline-block rounded-lg px-3 py-2 text-sm"
+          <label
+            :for="`status-${game.id}`"
+            class="mb-2 block text-sm font-semibold"
+          >
+            Game Status
+          </label>
+
+          <select
+            :id="`status-${game.id}`"
+            v-model="game.status"
+            class="mb-4 w-full rounded-lg border border-sky-200 px-3 py-2 text-sm outline-none"
             :class="{
               'bg-sky-100': game.status === 'Currently Playing',
               'bg-pink-300': game.status === 'Want to Play',
               'bg-purple-200': game.status === 'Completed',
             }"
           >
-            {{ game.status }}
-          </span>
+            <option value="Want to Play">Want to Play</option>
+            <option value="Currently Playing">Currently Playing</option>
+            <option value="Completed">Completed</option>
+          </select>
 
           <button
             type="button"
             class="block w-full rounded-lg bg-pink-300 px-4 py-3 hover:bg-pink-400"
           >
             View Details
+          </button>
+
+          <button
+            type="button"
+            @click="removeGame(game)"
+            class="mt-3 block w-full rounded-lg border border-pink-300 bg-white px-4 py-3 font-semibold text-pink-600 transition hover:bg-pink-100"
+          >
+            Remove Game
           </button>
         </div>
       </div>
