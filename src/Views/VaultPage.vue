@@ -58,6 +58,7 @@ function addApiGame(game) {
     title: game.name,
     status: 'Want to Play',
     image: game.image,
+    link: game.link,
     genre: game.genre,
     year: game.year,
   })
@@ -65,23 +66,13 @@ function addApiGame(game) {
   alert(`${game.name} was added to your ConQuest Vault!`)
 }
 
-const games = ref([
-  {
-    id: 1,
-    title: 'Stardew Valley',
-    status: 'Currently Playing',
-  },
-  {
-    id: 2,
-    title: 'The Legend of Zelda: Breath of the Wild',
-    status: 'Completed',
-  },
-  {
-    id: 3,
-    title: 'Animal Crossing: New Horizons',
-    status: 'Want to Play',
-  },
-])
+function closeGameBrainSearch() {
+  apiSearchResults.value = []
+  apiSearchQuery.value = ''
+  apiSearchError.value = ''
+}
+
+const games = ref([])
 
 const savedGames = localStorage.getItem('gameConquestVault')
 
@@ -198,9 +189,22 @@ const filteredGames = computed(() => {
           {{ apiSearchError }}
         </p>
 
-        <p v-if="apiSearchResults.length > 0" class="mt-3 text-sm">
-          Found {{ apiSearchResults.length }} games!
-        </p>
+        <div
+          v-if="apiSearchResults.length > 0"
+          class="mt-3 flex items-center justify-between"
+        >
+          <p class="text-sm">Found {{ apiSearchResults.length }} games!</p>
+
+          <button
+            type="button"
+            @click="closeGameBrainSearch"
+            aria-label="Close search results"
+            title="Close search results"
+            class="flex h-7 w-7 items-center justify-center rounded-full text-xl text-slate-500 hover:bg-pink-200 hover:text-slate-700"
+          >
+            &times;
+          </button>
+        </div>
 
         <!-- GameBrain Search Results -->
         <div
@@ -212,28 +216,47 @@ const filteredGames = computed(() => {
             :key="game.id"
             class="overflow-hidden rounded-xl bg-white p-4 shadow-sm"
           >
+            <!-- Game Cover -->
             <img
               v-if="game.image"
               :src="game.image"
-              :alt="game.name"
-              class="mb-4 h-40 w-full rounded-lg object-cover"
+              :alt="`${game.name} cover`"
+              class="h-44 w-full rounded-lg bg-sky-50 object-contain"
             />
 
-            <h3 class="mb-2 font-bold">
+            <!-- Game Information -->
+            <h3 class="mt-3 text-lg font-bold text-slate-700">
               {{ game.name }}
             </h3>
 
-            <p class="mb-1 text-sm">Genre: {{ game.genre || 'Unknown' }}</p>
+            <p class="mt-2 text-sm text-slate-600">
+              Genre: {{ game.genre || 'Unknown' }}
+            </p>
 
-            <p class="mb-4 text-sm">Year: {{ game.year || 'Unknown' }}</p>
+            <p class="mt-1 text-sm text-slate-600">
+              Year: {{ game.year || 'Unknown' }}
+            </p>
 
-            <button
-              type="button"
-              class="rounded-lg bg-pink-300 px-4 py-2 font-semibold hover:bg-pink-400"
-              @click="addApiGame(game)"
-            >
-              Add to Vault
-            </button>
+            <!-- Game Buttons -->
+            <div class="mt-4 flex flex-wrap gap-3">
+              <button
+                type="button"
+                @click="addApiGame(game)"
+                class="rounded-lg bg-pink-300 px-4 py-3 font-semibold text-slate-700 hover:bg-pink-400"
+              >
+                Add to Vault
+              </button>
+
+              <a
+                v-if="game.link"
+                :href="game.link"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center justify-center rounded-lg bg-sky-100 px-4 py-3 font-semibold text-slate-700 hover:bg-sky-200"
+              >
+                View Details ↗
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -339,18 +362,29 @@ const filteredGames = computed(() => {
         </button>
       </div>
 
+      <div
+        v-if="filteredGames.length === 0"
+        class="rounded-xl border border-dashed border-pink-200 bg-white p-8 text-center"
+      >
+        <p class="text-lg font-semibold">No ConQuests Found! 🎮</p>
+        <p class="mt-2 text-sm text-slate-500">
+          Your next adventure is waiting! Discover new games above and add them
+          to your ConQuest Vault.
+        </p>
+      </div>
+
       <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <div
           v-for="game in filteredGames"
           :key="game.id"
-          class="rounded-xl border border-pink-200 bg-white p-3"
+          class="flex flex-col rounded-xl border border-pink-200 bg-white p-4"
         >
           <div class="mb-4">
             <img
               v-if="game.image"
               :src="game.image"
               :alt="`${game.title} cover`"
-              class="h-44 w-full rounded-lg object-cover"
+              class="h-44 w-full rounded-lg bg-sky-50 object-contain"
             />
 
             <div
@@ -387,20 +421,26 @@ const filteredGames = computed(() => {
             <option value="Completed">Completed</option>
           </select>
 
-          <button
-            type="button"
-            class="block w-full rounded-lg bg-pink-300 px-4 py-3 hover:bg-pink-400"
-          >
-            View Details
-          </button>
+          <!-- Saved Game Actions -->
+          <div class="mt-2 flex gap-3">
+            <a
+              v-if="game.link"
+              :href="game.link"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="flex flex-1 items-center justify-center rounded-lg bg-sky-100 px-3 py-3 text-center font-semibold text-slate-700 hover:bg-sky-200"
+            >
+              View Details ↗
+            </a>
 
-          <button
-            type="button"
-            @click="removeGame(game)"
-            class="mt-3 block w-full rounded-lg border border-pink-300 bg-white px-4 py-3 font-semibold text-pink-600 transition hover:bg-pink-100"
-          >
-            Remove Game
-          </button>
+            <button
+              type="button"
+              @click="removeGame(game.id)"
+              class="flex-1 rounded-lg border border-pink-300 bg-white px-3 py-3 font-semibold text-pink-600 hover:bg-pink-50"
+            >
+              Remove Game
+            </button>
+          </div>
         </div>
       </div>
     </div>
