@@ -470,6 +470,29 @@ const filteredGames = computed(() => {
               <option value="Completed">Completed</option>
             </select>
 
+            <div class="flex min-h-8 items-center justify-center">
+              <button
+                v-if="game.gameBrainId && !game.detailsLoaded"
+                type="button"
+                @click="refreshGameDetails(game)"
+                :disabled="addingGameId !== null"
+                class="text-xs font-medium text-purple-600 transition hover:text-purple-800 hover:underline disabled:opacity-50"
+              >
+                {{
+                  addingGameId === game.gameBrainId
+                    ? 'Updating Details...'
+                    : '↻ Update Game Details'
+                }}
+              </button>
+
+              <span
+                v-else-if="game.gameBrainId && game.detailsLoaded"
+                class="text-xs text-slate-500"
+              >
+                ✓ Game details up to date
+              </span>
+            </div>
+
             <!-- Saved Game Actions -->
             <div class="mt-3 flex gap-3">
               <a
@@ -481,20 +504,6 @@ const filteredGames = computed(() => {
               >
                 View Details ↗
               </a>
-
-              <button
-                v-if="game.gameBrainId && !game.detailsLoaded"
-                type="button"
-                @click="refreshGameDetails(game)"
-                :disabled="addingGameId !== null"
-                class="rounded-lg bg-purple-200 px-4 py-2 text-sm font-semibold transition hover:bg-purple-300 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {{
-                  addingGameId === game.gameBrainId
-                    ? 'Updating Details...'
-                    : 'Update Game Details'
-                }}
-              </button>
 
               <button
                 type="button"
