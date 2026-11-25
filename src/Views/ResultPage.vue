@@ -214,16 +214,6 @@ function addToVault() {
           </div>
         </div>
 
-        <div
-          v-if="recommendedGame"
-          class="mx-auto mb-6 flex h-64 max-w-48 flex-col items-center justify-center gap-3 rounded-lg bg-sky-100 p-4 text-center shadow-sm"
-        >
-          <span class="text-5xl">🎮</span>
-          <span class="font-semibold">
-            {{ recommendedGame.title }}
-          </span>
-        </div>
-
         <p v-if="recommendedGame" class="mx-auto mb-4 max-w-xl">
           <strong>Why this game?</strong>
           You selected {{ selectedMood }} and have

@@ -48,6 +48,44 @@ export default {
       }
     }
 
+    if (url.pathname === '/api/game-detail') {
+      const id = url.searchParams.get('id')?.trim()
+
+      if (!id) {
+        return Response.json(
+          { error: 'Please provide a game ID.' },
+          { status: 400 },
+        )
+      }
+
+      const gameBrainUrl = new URL(
+        `https://api.gamebrain.co/v1/games/${encodeURIComponent(id)}`,
+      )
+
+      try {
+        const response = await fetch(gameBrainUrl, {
+          headers: {
+            'x-api-key': env.GAMEBRAIN_API_KEY,
+          },
+        })
+
+        if (!response.ok) {
+          return Response.json(
+            { error: 'Unable to retrieve game details.' },
+            { status: 502 },
+          )
+        }
+
+        const data = await response.json()
+        return Response.json(data)
+      } catch {
+        return Response.json(
+          { error: 'Unable to connect to GameBrain.' },
+          { status: 502 },
+        )
+      }
+    }
+
     return env.ASSETS.fetch(request)
   },
 }
