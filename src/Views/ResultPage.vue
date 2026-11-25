@@ -6,6 +6,7 @@ const route = useRoute()
 
 const selectedTime = route.query.time || ''
 const selectedMood = route.query.mood || ''
+const selectedSource = route.query.source || 'vault'
 
 const vaultGames = ref([])
 const recommendedGame = ref(null)
@@ -13,20 +14,16 @@ const recommendedGame = ref(null)
 const matchingGames = ref([])
 const currentGameIndex = ref(0)
 
-const gameMoods = {
-  'Stardew Valley': 'Relaxing & Cozy',
-  'Animal Crossing: New Horizons': 'Relaxing & Cozy',
-  'The Legend of Zelda: Breath of the Wild': 'Adventure & Exploration',
-}
-
-const gamePlayTimes = {
-  'Stardew Valley': ['Under 30 minutes', '30–60 minutes', 'Over 1 hour'],
-  'Animal Crossing: New Horizons': [
-    'Under 30 minutes',
-    '30–60 minutes',
-    'Over 1 hour',
+const moodGenres = {
+  'Relaxing & Cozy': ['Simulation', 'Casual', 'Puzzle', 'Farming'],
+  'Adventure & Exploration': ['Adventure', 'Role Playing', 'RPG', 'Open World'],
+  'Action & Challenge': [
+    'Action',
+    'Shooter',
+    'Fighting',
+    'Platformer',
+    'Arcade',
   ],
-  'The Legend of Zelda: Breath of the Wild': ['30–60 minutes', 'Over 1 hour'],
 }
 
 onMounted(() => {
@@ -37,12 +34,11 @@ onMounted(() => {
   }
 
   matchingGames.value = vaultGames.value.filter((game) => {
-    const matchesMood = gameMoods[game.title] === selectedMood
+    const genre = (game.genre || '').toLowerCase()
 
-    const matchesPlayTime =
-      gamePlayTimes[game.title]?.includes(selectedTime) ?? false
+    const matchingGenres = moodGenres[selectedMood] || []
 
-    return matchesMood && matchesPlayTime
+    return matchingGenres.some((item) => genre.includes(item.toLowerCase()))
   })
 
   if (matchingGames.value.length > 0) {
@@ -121,14 +117,14 @@ function playThisGame() {
           <strong>Why this game?</strong>
           You selected {{ selectedMood }} and have
           {{ selectedTime.toLowerCase() }} to play.
-          {{ recommendedGame.title }} matches both preferences and is already
-          saved in your ConQuest Vault!
+          {{ recommendedGame.title }} is recommended based on its genre and is
+          already saved in your ConQuest Vault!
         </p>
 
         <p v-else class="mx-auto mb-4 max-w-xl">
-          No games in your ConQuest Vault match your selected mood and available
-          playtime. Try changing your answers or adding more games to your Vault
-          to discover your next adventure!
+          No games in your ConQuest Vault match your selected mood. Try changing
+          your answers or adding more games to your Vault to discover your next
+          adventure!
         </p>
 
         <div class="flex flex-wrap justify-center gap-4">

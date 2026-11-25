@@ -395,51 +395,54 @@ const filteredGames = computed(() => {
             </div>
           </div>
 
-          <h2 class="mb-3 min-h-12 font-bold">
+          <h3 class="mt-3 text-xl font-bold text-slate-700">
             {{ game.title }}
-          </h2>
+          </h3>
 
-          <label
-            :for="`status-${game.id}`"
-            class="mb-2 block text-sm font-semibold"
-          >
-            Game Status
-          </label>
-
-          <select
-            :id="`status-${game.id}`"
-            v-model="game.status"
-            class="mb-4 w-full rounded-lg border border-sky-200 px-3 py-2 text-sm outline-none"
-            :class="{
-              'bg-sky-100': game.status === 'Currently Playing',
-              'bg-pink-300': game.status === 'Want to Play',
-              'bg-purple-200': game.status === 'Completed',
-            }"
-          >
-            <option value="Want to Play">Want to Play</option>
-            <option value="Currently Playing">Currently Playing</option>
-            <option value="Completed">Completed</option>
-          </select>
-
-          <!-- Saved Game Actions -->
-          <div class="mt-2 flex gap-3">
-            <a
-              v-if="game.link"
-              :href="game.link"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="flex flex-1 items-center justify-center rounded-lg bg-sky-100 px-3 py-3 text-center font-semibold text-slate-700 hover:bg-sky-200"
+          <!-- Bottom Controls -->
+          <div class="mt-auto pt-4">
+            <label
+              :for="`status-${game.id}`"
+              class="mb-2 block text-sm font-semibold"
             >
-              View Details ↗
-            </a>
+              Game Status
+            </label>
 
-            <button
-              type="button"
-              @click="removeGame(game.id)"
-              class="flex-1 rounded-lg border border-pink-300 bg-white px-3 py-3 font-semibold text-pink-600 hover:bg-pink-50"
+            <select
+              :id="`status-${game.id}`"
+              v-model="game.status"
+              class="w-full rounded-lg border border-sky-200 px-3 py-2 text-sm outline-none"
+              :class="{
+                'bg-sky-100': game.status === 'Currently Playing',
+                'bg-pink-300': game.status === 'Want to Play',
+                'bg-purple-200': game.status === 'Completed',
+              }"
             >
-              Remove Game
-            </button>
+              <option value="Want to Play">Want to Play</option>
+              <option value="Currently Playing">Currently Playing</option>
+              <option value="Completed">Completed</option>
+            </select>
+
+            <!-- Saved Game Actions -->
+            <div class="mt-3 flex gap-3">
+              <a
+                v-if="game.link"
+                :href="game.link"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="flex flex-1 items-center justify-center rounded-lg bg-sky-100 px-3 py-3 text-center font-semibold text-slate-700 hover:bg-sky-200"
+              >
+                View Details ↗
+              </a>
+
+              <button
+                type="button"
+                @click="removeGame(game)"
+                class="flex-1 rounded-lg border border-pink-300 bg-white px-3 py-3 font-semibold text-pink-600 hover:bg-pink-50"
+              >
+                Remove Game
+              </button>
+            </div>
           </div>
         </div>
       </div>

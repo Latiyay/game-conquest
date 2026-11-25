@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 
 const playTime = ref('')
 const gameMood = ref('')
+const gameSource = ref('vault')
 
 const router = useRouter()
 
@@ -18,6 +19,7 @@ function findMyConQuest() {
     query: {
       time: playTime.value,
       mood: gameMood.value,
+      source: gameSource.value,
     },
   })
 }
@@ -34,6 +36,48 @@ function findMyConQuest() {
       </p>
 
       <div class="rounded-xl bg-sky-100 p-8">
+        <!-- Recommendation Source -->
+        <h2 class="mb-5 text-xl font-bold">
+          Where should we find your next game?
+        </h2>
+
+        <div class="mb-4 flex flex-wrap gap-4">
+          <button
+            type="button"
+            @click="gameSource = 'vault'"
+            :aria-pressed="gameSource === 'vault'"
+            class="rounded-lg px-5 py-3 font-semibold transition"
+            :class="
+              gameSource === 'vault'
+                ? 'bg-pink-300 ring-2 ring-slate-500'
+                : 'bg-white hover:bg-pink-100'
+            "
+          >
+            My ConQuest Vault
+          </button>
+
+          <button
+            type="button"
+            @click="gameSource = 'api'"
+            :aria-pressed="gameSource === 'api'"
+            class="rounded-lg px-5 py-3 font-semibold transition"
+            :class="
+              gameSource === 'api'
+                ? 'bg-pink-300 ring-2 ring-slate-500'
+                : 'bg-white hover:bg-pink-100'
+            "
+          >
+            Discover New Games
+          </button>
+        </div>
+
+        <p class="mb-10">
+          {{
+            gameSource === 'vault'
+              ? 'Find your next adventure from games already in your Vault.'
+              : 'Discover games through GameBrain based on your preferences.'
+          }}
+        </p>
         <!-- Question 1 -->
         <h2 class="mb-5 text-xl font-bold">
           1. How much time do you have to play?
