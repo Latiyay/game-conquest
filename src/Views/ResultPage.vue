@@ -143,9 +143,7 @@ async function addToVault() {
   isAddingGame.value = true
 
   try {
-    const details = await gameBrainStore.getGameDetails(
-      game.gameBrainId,
-    )
+    const details = await gameBrainStore.getGameDetails(game.gameBrainId)
 
     const added = vaultStore.addGame({
       ...game,
@@ -172,22 +170,6 @@ async function addToVault() {
   } finally {
     isAddingGame.value = false
   }
-}
-
-  if (!added) {
-    alert(`${game.title} is already in your ConQuest Vault!`)
-    return
-  }
-
-  alert(`${game.title} was added to your ConQuest Vault!`)
-
-  matchingGames.value = matchingGames.value.filter(
-    (item) => item.id !== game.id,
-  )
-
-  currentGameIndex.value = 0
-
-  recommendedGame.value = matchingGames.value[0] || null
 }
 </script>
 
