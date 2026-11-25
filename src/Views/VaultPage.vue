@@ -1,5 +1,9 @@
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useVaultStore } from '../Stores/VaultStore.js'
+
+const vaultStore = useVaultStore()
 
 const apiSearchQuery = ref('')
 const apiSearchResults = ref([])
@@ -41,18 +45,7 @@ async function searchGameBrain() {
 }
 
 function addApiGame(game) {
-  const alreadyAdded = games.value.some(
-    (savedGame) =>
-      savedGame.gameBrainId === game.id ||
-      savedGame.title.toLowerCase() === game.name.toLowerCase(),
-  )
-
-  if (alreadyAdded) {
-    alert(`${game.name} is already in your ConQuest Vault!`)
-    return
-  }
-
-  games.value.push({
+  const added = vaultStore.addGame({
     id: `gamebrain-${game.id}`,
     gameBrainId: game.id,
     title: game.name,
@@ -63,6 +56,11 @@ function addApiGame(game) {
     year: game.year,
   })
 
+  if (!added) {
+    alert(`${game.name} is already in your ConQuest Vault!`)
+    return
+  }
+
   alert(`${game.name} was added to your ConQuest Vault!`)
 }
 
@@ -72,7 +70,7 @@ function closeGameBrainSearch() {
   apiSearchError.value = ''
 }
 
-const games = ref([])
+const { games } = storeToRefs(vaultStore)
 
 const savedGames = localStorage.getItem('gameConquestVault')
 
@@ -87,14 +85,6 @@ if (savedGames !== null) {
     console.error('Unable to load saved games:', error)
   }
 }
-
-watch(
-  games,
-  (updatedGames) => {
-    localStorage.setItem('gameConquestVault', JSON.stringify(updatedGames))
-  },
-  { deep: true },
-)
 
 const searchQuery = ref('')
 
@@ -117,7 +107,10 @@ function addGame() {
     status: newGameStatus.value,
   }
 
-  games.value.push(game)
+  if (!vaultStore.addGame(game)) {
+    alert('This game is already in your ConQuest Vault!')
+    return
+  }
 
   newGameTitle.value = ''
   newGameStatus.value = 'Want to Play'
@@ -132,7 +125,7 @@ function removeGame(game) {
   )
 
   if (confirmed) {
-    games.value = games.value.filter((savedGame) => savedGame.id !== game.id)
+    vaultStore.removeGame(game.id)
   }
 }
 
