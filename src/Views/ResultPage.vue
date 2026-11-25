@@ -3,9 +3,11 @@ import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useVaultStore } from '../Stores/VaultStore.js'
+import { useGameBrainStore } from '../Stores/GameBrainStore.js'
 
 const route = useRoute()
 const vaultStore = useVaultStore()
+const gameBrainStore = useGameBrainStore()
 
 const selectedTime = route.query.time || ''
 const selectedMood = route.query.mood || ''
@@ -18,6 +20,7 @@ const matchingGames = ref([])
 const currentGameIndex = ref(0)
 
 const isLoading = ref(false)
+const isAddingGame = ref(false)
 const apiError = ref('')
 
 const moodGenres = {
@@ -132,15 +135,44 @@ function playThisGame() {
   alert(`${game.title} is now marked as Currently Playing!`)
 }
 
-function addToVault() {
-  if (!recommendedGame.value) return
+async function addToVault() {
+  if (!recommendedGame.value || isAddingGame.value) return
 
   const game = recommendedGame.value
 
-  const added = vaultStore.addGame({
-    ...game,
-    status: 'Want to Play',
-  })
+  isAddingGame.value = true
+
+  try {
+    const details = await gameBrainStore.getGameDetails(
+      game.gameBrainId,
+    )
+
+    const added = vaultStore.addGame({
+      ...game,
+      ...details,
+      source: 'gamebrain',
+      status: 'Want to Play',
+      detailsLoaded: Boolean(details),
+    })
+
+    if (!added) {
+      alert(`${game.title} is already in your ConQuest Vault!`)
+      return
+    }
+
+    alert(`${game.title} was added to your ConQuest Vault!`)
+
+    matchingGames.value = matchingGames.value.filter(
+      (item) => item.id !== game.id,
+    )
+
+    currentGameIndex.value = 0
+
+    recommendedGame.value = matchingGames.value[0] || null
+  } finally {
+    isAddingGame.value = false
+  }
+}
 
   if (!added) {
     alert(`${game.title} is already in your ConQuest Vault!`)
@@ -240,16 +272,22 @@ function addToVault() {
           <button
             type="button"
             @click="selectedSource === 'vault' ? playThisGame() : addToVault()"
-            :disabled="!recommendedGame || isLoading"
+            :disabled="!recommendedGame || isLoading || isAddingGame"
             class="rounded-lg bg-pink-300 px-6 py-3 font-semibold hover:bg-pink-400 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {{ selectedSource === 'vault' ? 'Play This Game' : 'Add to Vault' }}
+            {{
+              isAddingGame
+                ? 'Adding Game...'
+                : selectedSource === 'vault'
+                  ? 'Play This Game'
+                  : 'Add to Vault'
+            }}
           </button>
 
           <button
             type="button"
             @click="tryAnotherGame"
-            :disabled="matchingGames.length <= 1"
+            :disabled="matchingGames.length <= 1 || isAddingGame"
             class="rounded-lg bg-sky-200 px-6 py-3 font-semibold hover:bg-sky-300 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Try Another Game

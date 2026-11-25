@@ -2,13 +2,16 @@
 import { ref, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useVaultStore } from '../Stores/VaultStore.js'
+import { useGameBrainStore } from '../Stores/GameBrainStore.js'
 
 const vaultStore = useVaultStore()
+const gameBrainStore = useGameBrainStore()
 
 const apiSearchQuery = ref('')
 const apiSearchResults = ref([])
 const apiSearchLoading = ref(false)
 const apiSearchError = ref('')
+const addingGameId = ref(null)
 
 async function searchGameBrain() {
   const query = apiSearchQuery.value.trim()
@@ -44,17 +47,40 @@ async function searchGameBrain() {
   }
 }
 
-function addApiGame(game) {
-  const added = vaultStore.addGame({
+async function addApiGame(game) {
+  const alreadyAdded = games.value.some(
+    (savedGame) =>
+      savedGame.gameBrainId === game.id ||
+      savedGame.title.toLowerCase() === game.name.toLowerCase(),
+  )
+
+  if (alreadyAdded) {
+    alert(`${game.name} is already in your ConQuest Vault!`)
+    return
+  }
+
+  if (addingGameId.value !== null) return
+
+  addingGameId.value = game.id
+
+  const details = await gameBrainStore.getGameDetails(game.id)
+
+  addingGameId.value = null
+
+  const gameToSave = details || {
     id: `gamebrain-${game.id}`,
     gameBrainId: game.id,
+    source: 'gamebrain',
     title: game.name,
     status: 'Want to Play',
     image: game.image,
     link: game.link,
     genre: game.genre,
     year: game.year,
-  })
+    detailsLoaded: false,
+  }
+
+  const added = vaultStore.addGame(gameToSave)
 
   if (!added) {
     alert(`${game.name} is already in your ConQuest Vault!`)
@@ -62,6 +88,31 @@ function addApiGame(game) {
   }
 
   alert(`${game.name} was added to your ConQuest Vault!`)
+}
+
+async function refreshGameDetails(game) {
+  if (!game.gameBrainId) return
+
+  if (addingGameId.value !== null) return
+
+  addingGameId.value = game.gameBrainId
+
+  try {
+    const details = await gameBrainStore.getGameDetails(game.gameBrainId)
+
+    if (!details) {
+      alert('Unable to retrieve game details. Please try again.')
+      return
+    }
+
+    const updated = vaultStore.updateGame(game.id, details)
+
+    if (updated) {
+      alert(`${game.title}'s details have been updated!`)
+    }
+  } finally {
+    addingGameId.value = null
+  }
 }
 
 function closeGameBrainSearch() {
@@ -235,9 +286,12 @@ const filteredGames = computed(() => {
               <button
                 type="button"
                 @click="addApiGame(game)"
+                :disabled="addingGameId !== null"
                 class="rounded-lg bg-pink-300 px-4 py-3 font-semibold text-slate-700 hover:bg-pink-400"
               >
-                Add to Vault
+                {{
+                  addingGameId === game.id ? 'Adding Game...' : 'Add to Vault'
+                }}
               </button>
 
               <a
@@ -427,6 +481,20 @@ const filteredGames = computed(() => {
               >
                 View Details ↗
               </a>
+
+              <button
+                v-if="game.gameBrainId && !game.detailsLoaded"
+                type="button"
+                @click="refreshGameDetails(game)"
+                :disabled="addingGameId !== null"
+                class="rounded-lg bg-purple-200 px-4 py-2 text-sm font-semibold transition hover:bg-purple-300 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {{
+                  addingGameId === game.gameBrainId
+                    ? 'Updating Details...'
+                    : 'Update Game Details'
+                }}
+              </button>
 
               <button
                 type="button"

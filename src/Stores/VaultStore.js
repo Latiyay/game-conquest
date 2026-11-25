@@ -49,10 +49,25 @@ export const useVaultStore = defineStore('vault', () => {
     }
   }
 
+  function updateGame(gameId, updatedDetails) {
+    const game = games.value.find((item) => item.id === gameId)
+
+    if (!game) return false
+
+    Object.assign(game, {
+      ...updatedDetails,
+      id: game.id,
+      status: game.status,
+    })
+
+    return true
+  }
+
   return {
     games,
     addGame,
     removeGame,
     updateStatus,
+    updateGame,
   }
 })
